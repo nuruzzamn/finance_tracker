@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface MonthlyData {
@@ -17,7 +17,7 @@ interface Transaction {
 export const IncomeExpenseChart = () => {
   const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
 
-  //tag: Temporary mock data for transactions
+  // Add mock transactions data
   const transactions: Transaction[] = [
     { date: '2024-01-15', amount: 3000 },
     { date: '2024-01-20', amount: -1200 },
@@ -27,42 +27,54 @@ export const IncomeExpenseChart = () => {
     { date: '2024-03-10', amount: -900 },
   ];
 
-  useEffect(() => {
-    if (transactions.length > 0) {
-      const monthlyTotals = transactions.reduce<Record<string, { income: number; expenses: number }>>(
-        (acc, transaction) => {
-          const date = new Date(transaction.date);
-          const month = date.toLocaleString('default', { month: 'short' });
-          
-          if (!acc[month]) {
-            acc[month] = { income: 0, expenses: 0 };
-          }
-          
-          if (transaction.amount > 0) {
-            acc[month].income += transaction.amount;
-          } else {
-            acc[month].expenses += Math.abs(transaction.amount);
-          }
-          
-          return acc;
-        }, 
-        {}
-      );
-      
-      const data: MonthlyData[] = Object.entries(monthlyTotals)
-        .sort((a, b) => {
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          return months.indexOf(a[0]) - months.indexOf(b[0]);
-        })
-        .map(([name, values]) => ({
-          name,
-          income: Number(values.income.toFixed(2)),
-          expenses: Number(values.expenses.toFixed(2)),
-        }));
-      
-      setMonthlyData(data);
+  const processTransactions = useCallback(() => {
+    try {
+      if (transactions.length > 0) {
+        const monthlyTotals = transactions.reduce<Record<string, { income: number; expenses: number }>>(
+          (acc, transaction) => {
+            const date = new Date(transaction.date);
+            const month = date.toLocaleString('default', { month: 'short' });
+            
+            if (!acc[month]) {
+              acc[month] = { income: 0, expenses: 0 };
+            }
+            
+            if (transaction.amount > 0) {
+              acc[month].income += transaction.amount;
+            } else {
+              acc[month].expenses += Math.abs(transaction.amount);
+            }
+            
+            return acc;
+          }, 
+          {}
+        );
+        
+        const data: MonthlyData[] = Object.entries(monthlyTotals)
+          .sort((a, b) => {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return months.indexOf(a[0]) - months.indexOf(b[0]);
+          })
+          .map(([name, values]) => ({
+            name,
+            income: Number(values.income.toFixed(2)),
+            expenses: Number(values.expenses.toFixed(2)),
+          }));
+        
+        setMonthlyData(data);
+      }
+    } catch (error) {
+      console.error('Error processing transactions:', error);
+      setMonthlyData([]);
     }
-  }, [transactions]);
+  }, []);
+
+  useEffect(() => {
+    processTransactions();
+    return () => {
+      setMonthlyData([]);
+    };
+  }, [processTransactions]);
 
   const formatTooltip = (value: number): string => {
     return new Intl.NumberFormat('en-US', {

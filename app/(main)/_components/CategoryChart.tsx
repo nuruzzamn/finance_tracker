@@ -1,12 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 
 interface CategoryData {
   name: string;
   value: number;
   color: string;
+}
+
+interface Transaction {
+  category: string;
+  amount: number;
 }
 
 const COLORS = {
@@ -21,8 +26,8 @@ const COLORS = {
 export const CategoryChart = () => {
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
 
-  // tag: Temporary mock data 
-  const transactions = [
+  // Add transactions data
+  const transactions: Transaction[] = [
     { category: 'Food', amount: -120 },
     { category: 'Rent', amount: -1000 },
     { category: 'Entertainment', amount: -200 },
@@ -30,7 +35,7 @@ export const CategoryChart = () => {
     { category: 'Other', amount: -80 },
   ];
 
-  useEffect(() => {
+  const processTransactions = useCallback(() => {
     if (transactions.length > 0) {
       const expenseCategories = transactions
         .filter(t => t.amount < 0)
@@ -43,15 +48,22 @@ export const CategoryChart = () => {
           return acc;
         }, {});
 
-      const categoryData: CategoryData[] = Object.entries(expenseCategories).map(([name, value]) => ({
+      const newCategoryData: CategoryData[] = Object.entries(expenseCategories).map(([name, value]) => ({
         name,
         value: value as number,
         color: COLORS[name as keyof typeof COLORS] || "#6B7280",
       }));
 
-      setCategoryData(categoryData);
+      setCategoryData(newCategoryData);
     }
-  }, [transactions]);
+  }, []);
+
+  useEffect(() => {
+    processTransactions();
+    return () => {
+      setCategoryData([]); // Cleanup on unmount
+    };
+  }, [processTransactions]);
 
   if (categoryData.length === 0) {
     return (

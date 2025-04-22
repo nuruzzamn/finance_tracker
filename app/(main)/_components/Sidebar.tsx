@@ -1,6 +1,6 @@
 "use client"
 import React from "react";
-import { Home, ListPlus, BarChart3, PiggyBank } from "lucide-react";
+import { Home, ListPlus, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from 'next/navigation';
 import { cn } from "@/lib/utils";

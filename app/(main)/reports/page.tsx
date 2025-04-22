@@ -1,5 +1,5 @@
 import React from "react";
-import Reports from "../_components/Reports";
+import Reports from "./_components/Reports";
 
 const page = () => {
   return (

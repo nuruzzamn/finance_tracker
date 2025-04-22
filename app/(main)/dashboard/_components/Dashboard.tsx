@@ -2,6 +2,9 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { TransactionSummary } from "../../_components/TransactionSummary";
 import { cn } from "@/lib/utils";
+import { CategoryChart } from "../../_components/CategoryChart";
+import { IncomeExpenseChart } from "../../_components/IncomeExpenseChart";
+import TransactionTable from "../../_components/TransactionTable";
 
 const Dashboard = () => {
   return (
@@ -37,10 +40,10 @@ const Dashboard = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            {/* <CategoryChart /> */}
+            <CategoryChart />
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            {/* <IncomeExpenseChart /> */}
+            <IncomeExpenseChart />
           </div>
         </div>
 
@@ -53,7 +56,7 @@ const Dashboard = () => {
               View all
             </button>
           </div>
-          {/* <TransactionTable /> */}
+          <TransactionTable />
         </div>
       </div>
     </div>

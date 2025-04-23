@@ -1,9 +1,18 @@
 "use client";
 import React, { useState } from "react";
 import { Plus, Filter } from "lucide-react";
-import { TransactionSummary } from "../../_components/TransactionSummary";
+import { TransactionSummary } from "./TransactionSummary";
 import { cn } from "@/lib/utils";
-import TransactionTable from "../../_components/TransactionTable";
+import { TransactionModal } from "./TransactionModal";
+import TransactionTable from "./TransactionTable";
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  category: string;
+  amount: number;
+}
 
 const Transactions = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -11,6 +20,13 @@ const Transactions = () => {
     startDate: "",
     endDate: "",
   });
+
+   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+    const handleSave = (transaction: Transaction) => {
+      console.log('New transaction:', transaction);
+      setIsModalOpen(false);
+    };
 
   const categories = [
     "All",
@@ -34,6 +50,7 @@ const Transactions = () => {
 
           <button
             type="button"
+            onClick={() => setIsModalOpen(true)}
             className={cn(
               "inline-flex items-center justify-center rounded-lg px-4 py-2.5",
               "bg-blue-600 text-white shadow-sm",
@@ -47,6 +64,13 @@ const Transactions = () => {
             Add Transaction
           </button>
         </div>
+
+        <TransactionModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSave}
+                label="Add Transaction"
+              />
 
         <TransactionSummary />
 

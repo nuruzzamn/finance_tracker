@@ -22,13 +22,6 @@ export const SummaryCard = ({
   className,
   trend,
 }: SummaryCardProps) => {
-  const formattedValue = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(Math.abs(value));
-
   return (
     <div className={cn(
       "bg-white dark:bg-gray-800",
@@ -57,7 +50,7 @@ export const SummaryCard = ({
             "transition-colors duration-200",
             valueClassName
           )}>
-            {formattedValue}
+            {value}
           </span>
         </div>
         {trend && (

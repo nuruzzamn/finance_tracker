@@ -1,12 +1,29 @@
-import React from "react";
+"use client"
+
+import React, { useState } from "react";
 import { Plus } from "lucide-react";
-import { TransactionSummary } from "../../_components/TransactionSummary";
+import { TransactionSummary } from "../../transactions/_components/TransactionSummary";
 import { cn } from "@/lib/utils";
 import { CategoryChart } from "../../_components/CategoryChart";
 import { IncomeExpenseChart } from "../../_components/IncomeExpenseChart";
-import TransactionTable from "../../_components/TransactionTable";
+import { TransactionModal } from "../../transactions/_components/TransactionModal";
+import TransactionTable from "../../transactions/_components/TransactionTable";
+
+interface Transaction {
+  id: string;
+  date: string;
+  description: string;
+  category: string;
+  amount: number;
+}
 
 const Dashboard = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleSave = (transaction: Transaction) => {
+    console.log('New transaction:', transaction);
+    setIsModalOpen(false);
+  };
   return (
     <div className="min-h-screen py-8 px-4 md:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -22,6 +39,7 @@ const Dashboard = () => {
 
           <button
             type="button"
+            onClick={() => setIsModalOpen(true)}
             className={cn(
               "inline-flex items-center justify-center rounded-lg px-4 py-2.5",
               "bg-blue-600 text-white shadow-sm",
@@ -35,6 +53,13 @@ const Dashboard = () => {
             Add Transaction
           </button>
         </div>
+
+        <TransactionModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSave}
+          label="Add Transaction"
+        />
 
         <TransactionSummary />
 

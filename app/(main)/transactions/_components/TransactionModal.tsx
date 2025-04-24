@@ -29,24 +29,69 @@ export const TransactionModal = ({ isOpen, onClose, transaction, onSave, label }
     date: new Date().toISOString().split('T')[0],
   });
 
+  const [transactionType, setTransactionType] = useState<'expense' | 'income'>(
+    transaction?.amount && transaction.amount >= 0 ? 'income' : 'expense'
+  );
+
   useEffect(() => {
     if (transaction) {
       setFormData(transaction);
+      setTransactionType(transaction.amount >= 0 ? 'income' : 'expense');
     }
   }, [transaction]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+    try {
+      // Determine if it's an income or expense category
+      const finalAmount = transactionType === 'expense' 
+        ? -Math.abs(formData.amount)
+        : Math.abs(formData.amount);
 
-    // tag : Show success message toast 
-    Swal.fire({
-      title: 'Success!',
-      text: 'Your data has been saved.',
-      icon: 'success',
-      confirmButtonText: 'OK',
-    });
+      const updatedTransaction = {
+        ...formData,
+        amount: finalAmount,
+      };
+
+      // Make API call based on whether it's an update or create
+      const url = formData.id 
+        ? `http://localhost:3000/api/transactions/${formData.id}`
+        : 'http://localhost:3000/api/transactions';
+
+      const response = await fetch(url, {
+        method: formData.id ? 'PATCH' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedTransaction),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save transaction');
+      }
+
+      const data = await response.json();
+      
+      onSave(data);
+      onClose();
+
+      Swal.fire({
+        title: 'Success!',
+        text: `Transaction ${formData.id ? 'updated' : 'created'} successfully`,
+        icon: 'success',
+        confirmButtonText: 'OK',
+      });
+      // Add auto refresh
+      window.location.reload();
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: `Failed to ${formData.id ? 'update' : 'create'} transaction`,
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
+    }
   };
 
   if (!isOpen) return null;
@@ -72,6 +117,35 @@ export const TransactionModal = ({ isOpen, onClose, transaction, onSave, label }
 
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-4">
+
+          <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Transaction Type
+          </label>
+          <div className="flex space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                value="expense"
+                checked={transactionType === 'expense'}
+                onChange={() => setTransactionType('expense')}
+                className="form-radio text-red-500"
+              />
+              <span className="ml-2">Expense</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                value="income"
+                checked={transactionType === 'income'}
+                onChange={() => setTransactionType('income')}
+                className="form-radio text-green-500"
+              />
+              <span className="ml-2">Income</span>
+            </label>
+          </div>
+        </div>
+
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Description
@@ -84,8 +158,30 @@ export const TransactionModal = ({ isOpen, onClose, transaction, onSave, label }
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Amount
+          </label>
+          <div className="relative">
+            <span className={`absolute left-3 top-2 ${
+              transactionType === 'expense' ? 'text-red-500' : 'text-green-500'
+            }`}>
+              {transactionType === 'expense' ? '-' : '+'}
+            </span>
+            <input
+              type="number"
+              value={Math.abs(formData.amount)}
+              onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) || 0 })}
+              className="w-full pl-7 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm"
+              min="0"
+              step="0.01"
+              required
+            />
+          </div>
+        </div>
+            
+            {/* <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Amount
               </label>
@@ -96,7 +192,7 @@ export const TransactionModal = ({ isOpen, onClose, transaction, onSave, label }
                 className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-20"
                 required
               />
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">

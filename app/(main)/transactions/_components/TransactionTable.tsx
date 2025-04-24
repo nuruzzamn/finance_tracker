@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { TransactionModal } from './TransactionModal';
 import Swal from 'sweetalert2';
@@ -12,109 +12,107 @@ interface Transaction {
   category: string;
   amount: number;
 }
-
 const TransactionTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [paginatedData, setPaginatedData] = useState<Transaction[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | undefined>();
-  const itemsPerPage = 5;
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+  const itemsPerPage = 10;
 
-  // Temporary mock data (expanded)
-  const transactions: Transaction[] = [
-    {
-      id: '1',
-      date: '2024-03-15',
-      description: 'Grocery Shopping',
-      category: 'Food',
-      amount: -1200
-    },
-    {
-      id: '2',
-      date: '2024-03-14',
-      description: 'Salary',
-      category: 'Income',
-      amount: 50000
-    },
+  const fetchTransactions = async (page: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/transactions?page=${page}&limit=${itemsPerPage}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+  
+      const data = await response.json();
+      
+      setPaginatedData(data.data || []);
+      // Fix: Calculate total pages based on total items and limit
+      const calculatedTotalPages = Math.ceil(data.total / data.limit);
+      setTotalPages(calculatedTotalPages);
+      setTotalItems(data.total || 0);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to load transactions',
+        icon: 'error',
+        confirmButtonText: 'Retry',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          fetchTransactions(page);
+        }
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    {
-      id: '3',
-      date: '2024-03-14',
-      description: 'Salary',
-      category: 'Income',
-      amount: 15000
-    },
-
-    {
-      id: '4',
-      date: '2024-03-14',
-      description: 'Salary',
-      category: 'Income',
-      amount: 5100
-    },
-    {
-      id: '5',
-      date: '2024-03-13',
-      description: 'Internet Bill',
-      category: 'Utilities',
-      amount: -2500
-    },
-    {
-      id: '6',
-      date: '2024-03-12',
-      description: 'Freelance Work',
-      category: 'Income',
-      amount: 25000
-    },
-    {
-      id: '7',
-      date: '2024-03-11',
-      description: 'Restaurant',
-      category: 'Food',
-      amount: -1800
-    },
-  ];
-
-  // Pagination calculations
-  const totalPages = Math.ceil(transactions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedTransactions = transactions.slice(startIndex, startIndex + itemsPerPage);
+  useEffect(() => {
+    fetchTransactions(currentPage);
+  }, [currentPage]);
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsModalOpen(true);
   };
-  
-  const handleDelete = () => {
-    // tag : Show delete message toast
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'This action cannot be undone!',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel',
-    }).then((result) => {
+
+  const handleDelete = async (transactionId: string) => {
+    try {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+      });
+
       if (result.isConfirmed) {
-        // Perform delete logic here
-        // For example, remove the transaction from the data store
-  
-        // toast show
-        Swal.fire({
+        const response = await fetch(`/api/transactions/${transactionId}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to delete transaction');
+        }
+
+        await Swal.fire({
           title: 'Deleted!',
-          text: 'Your item has been deleted.',
+          text: 'Transaction has been deleted successfully',
           icon: 'success',
           confirmButtonText: 'OK',
         });
+
+        fetchTransactions(currentPage);
       }
-    });
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to delete transaction',
+        icon: 'error',
+        confirmButtonText: 'OK',
+      });
+    }
   };
 
-  const handleSave = (updatedTransaction: Transaction) => {
-    // Here you would update the transaction in your data store
-    console.log('Updated transaction:', updatedTransaction);
-    setIsModalOpen(false);
+  const handleSave = async () => {
+    try {
+      await fetchTransactions(currentPage);
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Error updating transaction:', error);
+    }
   };
 
   return (
@@ -132,80 +130,120 @@ const TransactionTable = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedTransactions.map((transaction) => (
-                <tr 
-                  key={transaction.id}
-                  className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                >
-                  <td className="py-3 px-4 text-gray-900 dark:text-gray-100">
-                    {transaction.date}
-                  </td>
-                  <td className="py-3 px-4 text-gray-900 dark:text-gray-100">
-                    {transaction.description}
-                  </td>
-                  <td className="py-3 px-4 text-gray-900 dark:text-gray-100">
-                    {transaction.category}
-                  </td>
-                  <td className={`py-3 px-4 text-right ${
-                    transaction.amount >= 0 
-                      ? 'text-green-600 dark:text-green-400' 
-                      : 'text-red-600 dark:text-red-400'
-                  }`}>
-                    {transaction.amount}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex justify-end space-x-2">
-                      <button 
-                        onClick={() => handleEdit(transaction)}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
-                      >
-                        <Edit2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                      </button>
-                      <button onClick={handleDelete} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
-                        <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
-                      </button>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-4">
+                    <div className="flex justify-center items-center space-x-2">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                      <span>Loading...</span>
                     </div>
                   </td>
                 </tr>
-              ))}
+              ) : paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center py-4 text-gray-500">
+                    No transactions found
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((transaction) => (
+                  <tr 
+                    key={transaction.id}
+                    className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    <td className="py-3 px-4 text-gray-900 dark:text-gray-100">
+                      {transaction.date}
+                    </td>
+                    <td className="py-3 px-4 text-gray-900 dark:text-gray-100">
+                      {transaction.description}
+                    </td>
+                    <td className="py-3 px-4 text-gray-900 dark:text-gray-100">
+                      {transaction.category}
+                    </td>
+                    <td className={`py-3 px-4 text-right ${
+                      transaction.amount >= 0 
+                        ? 'text-green-600 dark:text-green-400' 
+                        : 'text-red-600 dark:text-red-400'
+                    }`}>
+                      {transaction.amount}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex justify-end space-x-2">
+                        <button 
+                          onClick={() => handleEdit(transaction)}
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                        >
+                          <Edit2 className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(transaction.id)} 
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500 dark:text-red-400" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
-        </table>
-      </div>
+          </table>
+        </div>
 
-      {/* Pagination Controls */}
-      <div className="mt-4 flex items-center justify-between pt-5">
-        <div className="text-sm text-gray-500 dark:text-gray-400">
-          Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, transactions.length)} of {transactions.length} entries
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
-            className={`p-2 rounded-md ${
-              currentPage === 1
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <span className="text-sm text-gray-600 dark:text-gray-300">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className={`p-2 rounded-md ${
-              currentPage === totalPages
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+        {/* Pagination Controls */}
+        <div className="mt-4 flex items-center justify-between pt-5">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {totalItems > 0 ? (
+              `Showing ${((currentPage - 1) * itemsPerPage) + 1} to ${Math.min(currentPage * itemsPerPage, totalItems)} of ${totalItems} entries`
+            ) : (
+              'No entries to show'
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1 || isLoading}
+              className={`p-2 rounded-md ${
+                currentPage === 1 || isLoading
+                  ? 'text-gray-400 cursor-not-allowed bg-gray-100 dark:bg-gray-700'
+                  : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+            
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  disabled={isLoading}
+                  className={`px-3 py-1 rounded-md ${
+                    currentPage === i + 1
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              {totalPages > 7 && <span className="px-2">...</span>}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages || isLoading}
+              className={`p-2 rounded-md ${
+                currentPage === totalPages || isLoading
+                  ? 'text-gray-400 cursor-not-allowed bg-gray-100 dark:bg-gray-700'
+                  : 'text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
       <TransactionModal
         isOpen={isModalOpen}

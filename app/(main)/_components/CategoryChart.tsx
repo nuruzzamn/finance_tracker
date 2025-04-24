@@ -10,8 +10,15 @@ interface CategoryData {
 }
 
 interface Transaction {
+  id: string;
+  date: string;
+  description: string;
   category: string;
   amount: number;
+}
+
+interface CategoryChartProps {
+  transactions: Transaction[];
 }
 
 const COLORS = {
@@ -23,46 +30,38 @@ const COLORS = {
   Other: "#6B7280",
 } as const;
 
-export const CategoryChart = () => {
+export const CategoryChart = ({ transactions }: CategoryChartProps) => {
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
 
-  // Add transactions data
-  const transactions: Transaction[] = [
-    { category: 'Food', amount: -120 },
-    { category: 'Rent', amount: -1000 },
-    { category: 'Entertainment', amount: -200 },
-    { category: 'Utilities', amount: -150 },
-    { category: 'Other', amount: -80 },
-  ];
-
   const processTransactions = useCallback(() => {
-    if (transactions.length > 0) {
-      const expenseCategories = transactions
-        .filter(t => t.amount < 0)
-        .reduce((acc: Record<string, number>, transaction) => {
-          const category = transaction.category;
-          if (!acc[category]) {
-            acc[category] = 0;
-          }
-          acc[category] += Math.abs(transaction.amount);
-          return acc;
-        }, {});
+    try {
+      if (transactions?.length > 0) {
+        const expenseCategories = transactions
+          .filter(t => t.amount < 0)
+          .reduce((acc: Record<string, number>, transaction) => {
+            const category = transaction.category;
+            acc[category] = (acc[category] || 0) + Math.abs(transaction.amount);
+            return acc;
+          }, {});
 
-      const newCategoryData: CategoryData[] = Object.entries(expenseCategories).map(([name, value]) => ({
-        name,
-        value: value as number,
-        color: COLORS[name as keyof typeof COLORS] || "#6B7280",
-      }));
+        const newCategoryData: CategoryData[] = Object.entries(expenseCategories)
+          .sort((a, b) => b[1] - a[1]) // Sort by highest expense first
+          .map(([name, value]) => ({
+            name,
+            value: Number(value.toFixed(2)),
+            color: COLORS[name as keyof typeof COLORS] || COLORS.Other,
+          }));
 
-      setCategoryData(newCategoryData);
+        setCategoryData(newCategoryData);
+      }
+    } catch (error) {
+      console.error('Error processing transactions:', error);
+      setCategoryData([]);
     }
-  }, []);
+  }, [transactions]);
 
   useEffect(() => {
     processTransactions();
-    return () => {
-      setCategoryData([]); // Cleanup on unmount
-    };
   }, [processTransactions]);
 
   if (categoryData.length === 0) {

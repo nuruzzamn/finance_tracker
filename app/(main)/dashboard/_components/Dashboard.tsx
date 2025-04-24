@@ -17,7 +17,19 @@ interface Transaction {
   amount: number;
 }
 
-const Dashboard = () => {
+interface TransactionData {
+  data: Transaction[];
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    balance: number;
+  };
+  total: number;
+  page: number;
+  limit: number;
+}
+
+const Dashboard = ({ transactions }: { transactions: TransactionData }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSave = (transaction: Transaction) => {
@@ -61,14 +73,14 @@ const Dashboard = () => {
           label="Add Transaction"
         />
 
-        <TransactionSummary />
+        <TransactionSummary data={transactions.summary} />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            <CategoryChart />
+            <CategoryChart transactions={transactions.data} />
           </div>
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-            <IncomeExpenseChart />
+            <IncomeExpenseChart transactions={transactions.data} />
           </div>
         </div>
 
@@ -77,11 +89,13 @@ const Dashboard = () => {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
               Recent Transactions
             </h2>
-            <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+            {/* <button className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
               View all
-            </button>
+            </button> */}
           </div>
-          <TransactionTable />
+          <TransactionTable 
+            // transactions={transactions.data}
+          />
         </div>
       </div>
     </div>

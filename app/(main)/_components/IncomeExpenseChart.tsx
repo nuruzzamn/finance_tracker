@@ -10,22 +10,19 @@ interface MonthlyData {
 }
 
 interface Transaction {
+  id: string;
   date: string;
+  description: string;
+  category: string;
   amount: number;
 }
 
-export const IncomeExpenseChart = () => {
-  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+interface IncomeExpenseChartProps {
+  transactions: Transaction[];
+}
 
-  // Add mock transactions data
-  const transactions: Transaction[] = [
-    { date: '2024-01-15', amount: 3000 },
-    { date: '2024-01-20', amount: -1200 },
-    { date: '2024-02-01', amount: 3500 },
-    { date: '2024-02-15', amount: -1500 },
-    { date: '2024-03-01', amount: 3200 },
-    { date: '2024-03-10', amount: -900 },
-  ];
+export const IncomeExpenseChart = ({ transactions }: IncomeExpenseChartProps) => {
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
 
   const processTransactions = useCallback(() => {
     try {
@@ -67,13 +64,10 @@ export const IncomeExpenseChart = () => {
       console.error('Error processing transactions:', error);
       setMonthlyData([]);
     }
-  }, []);
+  }, [transactions]);
 
   useEffect(() => {
     processTransactions();
-    return () => {
-      setMonthlyData([]);
-    };
   }, [processTransactions]);
 
   const formatTooltip = (value: number): string => {

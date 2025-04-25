@@ -1,8 +1,8 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, Filter } from "lucide-react";
 import { TransactionSummary } from "./TransactionSummary";
-import { cn } from "@/lib/utils";
+import { baseUrl, cn } from "@/lib/utils";
 import { TransactionModal } from "./TransactionModal";
 import TransactionTable from "./TransactionTable";
 
@@ -14,14 +14,30 @@ interface Transaction {
   amount: number;
 }
 
+interface TransactionData {
+  data: Transaction[];
+  summary: {
+    totalIncome: number;
+    totalExpenses: number;
+    balance: number;
+  };
+  total: number;
+  page: number;
+  limit: number;
+  totalPages?: number;
+}
+
 const Transactions = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [dateRange, setDateRange] = useState({
     startDate: "",
     endDate: "",
   });
+  // const [transactions, setTransactions] = useState("");
 
    const [isModalOpen, setIsModalOpen] = useState(false);
+   const [transactions, setTransactions] = useState<TransactionData>();
+   const [isLoading, setIsLoading] = useState(false);
   
     const handleSave = (transaction: Transaction) => {
       console.log('New transaction:', transaction);
@@ -38,6 +54,34 @@ const Transactions = () => {
     "Other",
   ];
 
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`${baseUrl}/api/transactions?page=1&limit=10&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&category=${selectedCategory}`, {
+        cache: 'no-store'
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to fetch transactions');
+      }
+      const data = await res.json();
+      setTransactions(data || []);
+
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => { 
+    fetchData();
+  }, [selectedCategory, dateRange]);
+
+  const handleFilter = () => {
+    fetchData();
+  }
+  console.log("isLoading", isLoading);
   return (
     <div className="min-h-screen py-8 px-4 md:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -72,7 +116,7 @@ const Transactions = () => {
                 label="Add Transaction"
               />
 
-        <TransactionSummary />
+        {transactions && <TransactionSummary data={transactions.summary}/>}
 
         {/* Add Filters Section */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
@@ -180,9 +224,7 @@ const Transactions = () => {
                 Reset
               </button>
               <button
-                onClick={() => {
-                  // Apply filters logic here
-                }}
+                onClick={handleFilter}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
               >
                 Apply Filters
@@ -199,8 +241,8 @@ const Transactions = () => {
             </h2>
           </div>
           <TransactionTable
-          // categoryFilter={selectedCategory}
-          // dateRange={dateRange}
+            selectedCategory={selectedCategory}
+            dateRange={dateRange}
           />
         </div>
       </div>

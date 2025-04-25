@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Edit2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { TransactionModal } from './TransactionModal';
 import Swal from 'sweetalert2';
+import { baseUrl } from '@/lib/utils';
 
 interface Transaction {
   id: string;
@@ -12,7 +13,16 @@ interface Transaction {
   category: string;
   amount: number;
 }
-const TransactionTable = () => {
+
+interface TransactionTableProps {
+  dateRange?: {
+    startDate: string;
+    endDate: string;
+  };
+  selectedCategory?: string;
+}
+
+const TransactionTable: React.FC<TransactionTableProps> = ({dateRange, selectedCategory}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [paginatedData, setPaginatedData] = useState<Transaction[]>([]);
@@ -25,13 +35,16 @@ const TransactionTable = () => {
   const fetchTransactions = async (page: number) => {
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/transactions?page=${page}&limit=${itemsPerPage}`);
+      const response = await fetch(`${baseUrl}/api/transactions?page=${page}&limit=${itemsPerPage}&startDate=${dateRange?.startDate}&endDate=${dateRange?.endDate}&category=${selectedCategory}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch transactions');
       }
   
       const data = await response.json();
+
+      console.log("data", data);
+      
       
       setPaginatedData(data.data || []);
       // Fix: Calculate total pages based on total items and limit
@@ -57,7 +70,7 @@ const TransactionTable = () => {
 
   useEffect(() => {
     fetchTransactions(currentPage);
-  }, [currentPage]);
+  }, [currentPage, selectedCategory, dateRange]);
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);

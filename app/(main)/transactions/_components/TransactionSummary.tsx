@@ -17,7 +17,7 @@ export const TransactionSummary = ({ data }: TransactionSummaryProps) => {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <SummaryCard
         title="Total Income"
-        value={data.totalIncome}
+        value={data?.totalIncome}
         icon={
           <ArrowUpCircle className={cn(
             "h-5 w-5",
@@ -30,7 +30,7 @@ export const TransactionSummary = ({ data }: TransactionSummaryProps) => {
       />
       <SummaryCard
         title="Total Expenses"
-        value={data.totalExpenses}
+        value={data?.totalExpenses}
         icon={
           <ArrowDownCircle className={cn(
             "h-5 w-5",
@@ -43,7 +43,7 @@ export const TransactionSummary = ({ data }: TransactionSummaryProps) => {
       />
       <SummaryCard
         title="Current Balance"
-        value={data.balance}
+        value={data?.balance}
         icon={
           <Wallet className={cn(
             "h-5 w-5",
@@ -52,7 +52,7 @@ export const TransactionSummary = ({ data }: TransactionSummaryProps) => {
           )} />
         }
         valueClassName={cn(
-          data.balance >= 0 
+          data?.balance >= 0 
             ? "text-emerald-500 dark:text-emerald-400" 
             : "text-rose-500 dark:text-rose-400"
         )}

@@ -1,13 +1,14 @@
 "use client"
 
 import React, { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Table } from "lucide-react";
 import { TransactionSummary } from "../../transactions/_components/TransactionSummary";
 import { cn } from "@/lib/utils";
 import { CategoryChart } from "../../_components/CategoryChart";
 import { IncomeExpenseChart } from "../../_components/IncomeExpenseChart";
 import { TransactionModal } from "../../transactions/_components/TransactionModal";
-import TransactionTable from "../../transactions/_components/TransactionTable";
+// import TransactionTable from "../../transactions/_components/TransactionTable";
+import TableDataDetails from "../../transactions/_components/TableDataDetails";
 
 interface Transaction {
   id: string;
@@ -93,9 +94,10 @@ const Dashboard = ({ transactions }: { transactions: TransactionData }) => {
               View all
             </button> */}
           </div>
-          <TransactionTable 
-            // transactions={transactions.data}
-          />
+          {/* <TransactionTable 
+            transactions={transactions.data}
+          /> */}
+          <TableDataDetails />
         </div>
       </div>
     </div>

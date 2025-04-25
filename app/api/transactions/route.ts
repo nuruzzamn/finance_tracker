@@ -4,7 +4,9 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
+    
+    // Get all query parameters
+    const category = searchParams.get('category')?.toLowerCase();
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
     const page = parseInt(searchParams.get('page') || '1');
@@ -12,31 +14,39 @@ export async function GET(request: Request) {
 
     let filteredTransactions = [...transactions.transactions];
 
-    // Apply filters
-    if (category) {
-      filteredTransactions = filteredTransactions.filter(t => t.category === category);
+    // Apply filters if parameters exist
+    if (category && category !== 'all') {
+      filteredTransactions = filteredTransactions.filter(t => 
+        t.category.toLowerCase() === category
+      );
     }
     if (startDate) {
-      filteredTransactions = filteredTransactions.filter(t => t.date >= startDate);
+      filteredTransactions = filteredTransactions.filter(t => 
+        new Date(t.date) >= new Date(startDate)
+      );
     }
     if (endDate) {
-      filteredTransactions = filteredTransactions.filter(t => t.date <= endDate);
+      filteredTransactions = filteredTransactions.filter(t => 
+        new Date(t.date) <= new Date(endDate)
+      );
     }
 
-    const summary = updateSummary();
-    
     // Calculate pagination
     const total = filteredTransactions.length;
+    const totalPages = Math.ceil(total / limit);
     const start = (page - 1) * limit;
     const end = start + limit;
     const paginatedTransactions = filteredTransactions.slice(start, end);
+
+    const summary = updateSummary();
 
     return NextResponse.json({
       data: paginatedTransactions,
       summary,
       total,
       page,
-      limit
+      limit,
+      totalPages
     });
   } catch (error) {
     return NextResponse.json(

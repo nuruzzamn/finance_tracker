@@ -1,5 +1,5 @@
-# Use an official Node.js runtime as the base image
-FROM node:18-alpine
+# Use Node.js 20 for better compatibility with React 19
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -19,5 +19,5 @@ RUN npm run build
 # Expose port 3000
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "start"]
+# Start the application in production mode
+CMD ["npm", "run", "start"]

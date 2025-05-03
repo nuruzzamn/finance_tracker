@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react";
-import { Plus, Table } from "lucide-react";
+import { Plus } from "lucide-react";
 import { TransactionSummary } from "../../transactions/_components/TransactionSummary";
 import { cn } from "@/lib/utils";
 import { CategoryChart } from "../../_components/CategoryChart";

@@ -98,7 +98,8 @@ export const TransactionModal = ({ isOpen, onClose, transaction, onSave, label }
       <div className="relative z-50 w-full max-w-md rounded-lg bg-white dark:bg-gray-800 shadow-xl">
         <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 px-6 py-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Edit Transaction
+            {/* Edit Transaction */}
+            {label}
           </h2>
           <button
             onClick={onClose}
@@ -164,11 +165,12 @@ export const TransactionModal = ({ isOpen, onClose, transaction, onSave, label }
             </span>
             <input
               type="number"
-              value={Math.abs(formData.amount)}
+              value={Math.abs(formData.amount) || ""}
               onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) || 0 })}
               className="w-full pl-7 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm"
               min="0"
               step="0.01"
+              placeholder="0"
               required
             />
           </div>

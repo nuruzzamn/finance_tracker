@@ -1,18 +1,11 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Edit2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { TransactionModal } from './TransactionModal';
 import Swal from 'sweetalert2';
 import { baseUrl } from '@/lib/utils';
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  amount: number;
-}
+import { Transaction } from '@/types/transactions';
 
 const TableDataDetails = () => {
 
@@ -25,7 +18,7 @@ const TableDataDetails = () => {
       const [totalItems, setTotalItems] = useState(0);
       const itemsPerPage = 10;
     
-      const fetchTransactions = async (page: number) => {
+      const fetchTransactions = useCallback(async (page: number) => {
         try {
           setIsLoading(true);
           const response = await fetch(`${baseUrl}/api/transactions?page=${page}&limit=${itemsPerPage}`);
@@ -33,14 +26,11 @@ const TableDataDetails = () => {
           if (!response.ok) {
             throw new Error('Failed to fetch transactions');
           }
-      
-          const data = await response.json();
     
+          const data = await response.json();
           console.log("data", data);
           
-          
           setPaginatedData(data.data || []);
-          // Fix: Calculate total pages based on total items and limit
           const calculatedTotalPages = Math.ceil(data.total / data.limit);
           setTotalPages(calculatedTotalPages);
           setTotalItems(data.total || 0);
@@ -59,11 +49,11 @@ const TableDataDetails = () => {
         } finally {
           setIsLoading(false);
         }
-      };
-    
+      }, []);  // Empty dependency array since it doesn't depend on any props or state
+
       useEffect(() => {
         fetchTransactions(currentPage);
-      }, [currentPage,]);
+      }, [currentPage, fetchTransactions]);  // Added fetchTransactions to dependency array
     
       const handleEdit = (transaction: Transaction) => {
         setSelectedTransaction(transaction);

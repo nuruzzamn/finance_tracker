@@ -1,5 +1,6 @@
 import { baseUrl } from "@/lib/utils";
 import Dashboard from "./(main)/dashboard/_components/Dashboard";
+import { TransactionData } from "@/types/transactions";
 
 export default async function Home() {
   const res = await fetch(`${baseUrl}/api/transactions`, {
@@ -10,12 +11,18 @@ export default async function Home() {
     throw new Error('Failed to fetch transactions');
   }
   
-  const transactions = await res.json(); // Added await here
+  const transactions:TransactionData = await res.json(); // Added await here
 
   console.log("transactions", transactions);
+  if (!transactions) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <>
-      <Dashboard transactions={transactions} /> 
+      {transactions && 
+        <Dashboard transactions={transactions} /> 
+      }
     </>
   );
 }

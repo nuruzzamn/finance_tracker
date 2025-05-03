@@ -3,14 +3,7 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import Swal from 'sweetalert2';
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  amount: number;
-}
+import { Transaction } from "@/types/transactions";
 
 interface TransactionModalProps {
   isOpen: boolean;

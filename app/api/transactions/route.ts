@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch transactions' },
+      { error: `Failed to fetch transactions, ${error}` },
       { status: 500 }
     );
   }
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
     return NextResponse.json(transaction, { status: 201 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to create transaction' },
+      { error: `Failed to create transaction, ${error}` },
       { status: 500 }
     );
   }
@@ -116,7 +116,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json(transactions.transactions[index]);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to update transaction' },
+      { error: `Failed to update transaction, ${error}` },
       { status: 500 }
     );
   }
@@ -148,7 +148,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: 'Transaction deleted' });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to delete transaction' },
+      { error: `Failed to delete transaction, ${error}` },
       { status: 500 }
     );
   }

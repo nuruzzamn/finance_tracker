@@ -1,12 +1,21 @@
 import { transactions } from '@/db/db';
 import { NextResponse } from 'next/server';
 
+export type ParamsType = Promise<{ id: string }>;
+
+export async function generateStaticParams() {
+  return transactions.transactions.map((transaction) => ({
+    id: transaction.id.toString(),
+  }));
+}
+
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: ParamsType }
 ) {
   try {
-    const id = params.id;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const transaction = transactions.transactions.find(t => t.id === id);
 
     if (!transaction) {
@@ -19,7 +28,7 @@ export async function GET(
     return NextResponse.json(transaction);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch transaction' },
+      { error: `Failed to fetch transaction, ${error}` },
       { status: 500 }
     );
   }
@@ -27,10 +36,11 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: ParamsType }
 ) {
   try {
-    const id = params.id;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const updates = await request.json();
     
     const index = transactions.transactions.findIndex(t => t.id === id);
@@ -50,7 +60,7 @@ export async function PATCH(
     return NextResponse.json(transactions.transactions[index]);
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to update transaction' },
+      { error: `Failed to update transaction, ${error}` },
       { status: 500 }
     );
   }
@@ -58,10 +68,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: ParamsType }
 ) {
   try {
-    const id = params.id;
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
     const initialLength = transactions.transactions.length;
     
     transactions.transactions = transactions.transactions.filter(t => t.id !== id);
@@ -76,7 +87,7 @@ export async function DELETE(
     return NextResponse.json({ message: 'Transaction deleted' });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to delete transaction' },
+      { error: `Failed to delete transaction, ${error}` },
       { status: 500 }
     );
   }

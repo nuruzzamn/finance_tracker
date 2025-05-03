@@ -1,31 +1,11 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Plus, Filter } from "lucide-react";
 import { TransactionSummary } from "./TransactionSummary";
 import { baseUrl, cn } from "@/lib/utils";
 import { TransactionModal } from "./TransactionModal";
 import TransactionTable from "./TransactionTable";
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  amount: number;
-}
-
-interface TransactionData {
-  data: Transaction[];
-  summary: {
-    totalIncome: number;
-    totalExpenses: number;
-    balance: number;
-  };
-  total: number;
-  page: number;
-  limit: number;
-  totalPages?: number;
-}
+import { Transaction, TransactionData } from "@/types/transactions";
 
 const Transactions = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
@@ -54,7 +34,7 @@ const Transactions = () => {
     "Other",
   ];
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       const res = await fetch(`${baseUrl}/api/transactions?page=1&limit=10&startDate=${dateRange.startDate}&endDate=${dateRange.endDate}&category=${selectedCategory}`, {
@@ -72,11 +52,11 @@ const Transactions = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dateRange.startDate, dateRange.endDate, selectedCategory]);
 
   useEffect(() => { 
     fetchData();
-  }, [selectedCategory, dateRange]);
+  }, [fetchData]);
 
   const handleFilter = () => {
     fetchData();

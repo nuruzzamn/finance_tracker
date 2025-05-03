@@ -1,12 +1,7 @@
 import { ArrowUpCircle, ArrowDownCircle, Wallet } from 'lucide-react';
 import { SummaryCard } from '../../_components/SummaryCard';
 import { cn } from '@/lib/utils';
-
-interface SummaryData {
-  totalIncome: number;
-  totalExpenses: number;
-  balance: number;
-}
+import { SummaryData } from '@/types/transactions';
 
 interface TransactionSummaryProps {
   data: SummaryData;

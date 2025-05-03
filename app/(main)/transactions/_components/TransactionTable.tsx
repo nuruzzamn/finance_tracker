@@ -1,18 +1,11 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Edit2, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { TransactionModal } from './TransactionModal';
 import Swal from 'sweetalert2';
 import { baseUrl } from '@/lib/utils';
-
-interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  category: string;
-  amount: number;
-}
+import { Transaction } from '@/types/transactions';
 
 interface TransactionTableProps {
   dateRange?: {
@@ -32,7 +25,7 @@ const TransactionTable: React.FC<TransactionTableProps> = ({dateRange, selectedC
   const [totalItems, setTotalItems] = useState(0);
   const itemsPerPage = 10;
 
-  const fetchTransactions = async (page: number) => {
+  const fetchTransactions = useCallback(async (page: number) => {
     try {
       setIsLoading(true);
       const response = await fetch(`${baseUrl}/api/transactions?page=${page}&limit=${itemsPerPage}&startDate=${dateRange?.startDate}&endDate=${dateRange?.endDate}&category=${selectedCategory}`);
@@ -42,12 +35,9 @@ const TransactionTable: React.FC<TransactionTableProps> = ({dateRange, selectedC
       }
   
       const data = await response.json();
-
       console.log("data", data);
       
-      
       setPaginatedData(data.data || []);
-      // Fix: Calculate total pages based on total items and limit
       const calculatedTotalPages = Math.ceil(data.total / data.limit);
       setTotalPages(calculatedTotalPages);
       setTotalItems(data.total || 0);
@@ -66,11 +56,11 @@ const TransactionTable: React.FC<TransactionTableProps> = ({dateRange, selectedC
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [dateRange, selectedCategory, itemsPerPage]);
 
   useEffect(() => {
     fetchTransactions(currentPage);
-  }, [currentPage, selectedCategory, dateRange]);
+  }, [currentPage, fetchTransactions]);
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);

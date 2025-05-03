@@ -28,6 +28,7 @@ interface TransactionData {
   total: number;
   page: number;
   limit: number;
+  totalPages: number;
 }
 
 const Dashboard = ({ transactions }: { transactions: TransactionData }) => {
